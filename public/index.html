@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Opportunities - Join Our Team</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .application-form {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: #fafafa;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-upload input[type="file"] {
+            opacity: 0;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            background-color: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-label:hover {
+            background-color: #f0f2ff;
+            border-color: #5a6fd8;
+        }
+
+        .file-upload-text {
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .success-message {
+            display: none;
+            background: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .application-form {
+                padding: 25px;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            input, select, textarea {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.7rem;
+            }
+
+            .application-form {
+                padding: 20px;
+            }
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        .position-highlight {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .position-highlight h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .position-highlight p {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Join Our Amazing Team</h1>
+            <p>Take the next step in your career journey with us</p>
+        </div>
+
+        <div class="position-highlight">
+            <h3>We're Hiring Multiple Positions!</h3>
+            <p>Full-time opportunities with competitive benefits and growth potential</p>
+        </div>
+
+        <form class="application-form" id="jobApplicationForm">
+            <h2 style="margin-bottom: 30px; color: #333; text-align: center;">Application Form</h2>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="firstName">First Name <span class="required">*</span></label>
+                    <input type="text" id="firstName" name="firstName" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name <span class="required">*</span></label>
+                    <input type="text" id="lastName" name="lastName" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="email">Email Address <span class="required">*</span></label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone Number <span class="required">*</span></label>
+                    <input type="tel" id="phone" name="phone" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="address">Address</label>
+                <input type="text" id="address" name="address" placeholder="Street Address, City, State, ZIP">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="position">Position Applied For <span class="required">*</span></label>
+                    <select id="position" name="position" required>
+                        <option value="">Select a position</option>
+                        <option value="Software Developer">Software Developer</option>
+                        <option value="Marketing Specialist">Marketing Specialist</option>
+                        <option value="Sales Representative">Sales Representative</option>
+                        <option value="Customer Service">Customer Service</option>
+                        <option value="Project Manager">Project Manager</option>
+                        <option value="Data Analyst">Data Analyst</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="experience">Years of Experience</label>
+                    <select id="experience" name="experience">
+                        <option value="">Select experience</option>
+                        <option value="0-1">0-1 years</option>
+                        <option value="2-3">2-3 years</option>
+                        <option value="4-5">4-5 years</option>
+                        <option value="6-10">6-10 years</option>
+                        <option value="10+">10+ years</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="salary">Expected Salary Range</label>
+                <input type="text" id="salary" name="salary" placeholder="e.g., $50,000 - $60,000">
+            </div>
+
+            <div class="form-group">
+                <label for="availability">Available Start Date</label>
+                <input type="date" id="availability" name="availability">
+            </div>
+
+            <div class="form-group">
+                <label for="resume">Resume/CV <span class="required">*</span></label>
+                <div class="file-upload">
+                    <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" required>
+                    <label for="resume" class="file-upload-label">
+                        <span class="file-upload-text">📄 Click to upload your resume (PDF, DOC, DOCX)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="coverLetter">Cover Letter</label>
+                <textarea id="coverLetter" name="coverLetter" placeholder="Tell us why you're perfect for this role and what makes you unique..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="linkedin">LinkedIn Profile URL</label>
+                <input type="url" id="linkedin" name="linkedin" placeholder="https://linkedin.com/in/yourprofile">
+            </div>
+
+            <div class="form-group">
+                <label for="portfolio">Portfolio/Website URL</label>
+                <input type="url" id="portfolio" name="portfolio" placeholder="https://yourportfolio.com">
+            </div>
+
+            <div class="form-group">
+                <label for="source">How did you hear about us?</label>
+                <select id="source" name="source">
+                    <option value="">Select an option</option>
+                    <option value="Job Board">Job Board (Indeed, LinkedIn, etc.)</option>
+                    <option value="Company Website">Company Website</option>
+                    <option value="Referral">Employee Referral</option>
+                    <option value="Social Media">Social Media</option>
+                    <option value="Career Fair">Career Fair</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                Submit Application ✨
+            </button>
+
+            <div class="success-message" id="successMessage">
+                <h3>🎉 Application Submitted Successfully!</h3>
+                <p>Thank you for your interest in joining our team. We have received your application and will review it carefully. You should receive a confirmation email shortly. We'll be in touch within 24-48 hours if your qualifications match our current needs.</p>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('jobApplicationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            const submitBtn = this.querySelector('.submit-btn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Submitting Application...';
+            submitBtn.disabled = true;
+            
+            try {
+                // Collect form data
+                const formData = new FormData(this);
+                
+                // Submit to backend server
+                const response = await fetch('/api/submit-application', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update success message with application ID
+                    const successMessage = document.getElementById('successMessage');
+                    successMessage.innerHTML = `
+                        <h3>🎉 Application Submitted Successfully!</h3>
+                        <p><strong>Application ID:</strong> ${result.applicationId}</p>
+                        <p>Thank you for your interest in joining our team. We have received your application and will review it carefully. You should receive a confirmation email shortly at the address you provided.</p>
+                        <p>We'll be in touch within 24-48 hours if your qualifications match our current needs.</p>
+                        <p><em>Please save your Application ID for future reference.</em></p>
+                    `;
+                    
+                    // Show success message
+                    successMessage.classList.add('show');
+                    
+                    // Scroll to success message
+                    successMessage.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                    
+                    // Reset form after a delay
+                    setTimeout(() => {
+                        this.reset();
+                        document.querySelector('.file-upload-text').textContent = '📄 Click to upload your resume (PDF, DOC, DOCX)';
+                        document.querySelector('.file-upload-text').style.color = '#667eea';
+                        successMessage.classList.remove('show');
+                    }, 8000);
+                    
+                } else {
+                    throw new Error(result.message || 'Submission failed');
+                }
+                
+            } catch (error) {
+                console.error('Submission error:', error);
+                
+                // Show error message
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'error-message';
+                errorMessage.innerHTML = `
+                    <h3>❌ Submission Failed</h3>
+                    <p>There was an error submitting your application: ${error.message}</p>
+                    <p>Please check your internet connection and try again. If the problem persists, please contact our support team.</p>
+                `;
+                errorMessage.style.cssText = `
+                    display: block;
+                    background: #f8d7da;
+                    color: #721c24;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin-top: 20px;
+                    border: 1px solid #f5c6cb;
+                    animation: slideIn 0.5s ease;
+                `;
+                
+                this.appendChild(errorMessage);
+                
+                // Remove error message after 6 seconds
+                setTimeout(() => {
+                    if (errorMessage.parentNode) {
+                        errorMessage.parentNode.removeChild(errorMessage);
+                    }
+                }, 6000);
+                
+            } finally {
+                // Reset button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        // File upload feedback
+        document.getElementById('resume').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || 'Click to upload your resume (PDF, DOC, DOCX)';
+            const label = document.querySelector('.file-upload-text');
+            if (e.target.files[0]) {
+                label.textContent = `📄 ${fileName}`;
+                label.style.color = '#28a745';
+            } else {
+                label.textContent = '📄 Click to upload your resume (PDF, DOC, DOCX)';
+                label.style.color = '#667eea';
+            }
+        });
+
+        // Form validation enhancements
+        document.querySelectorAll('input[required], select[required]').forEach(field => {
+            field.addEventListener('blur', function() {
+                if (!this.value.trim()) {
+                    this.style.borderColor = '#e74c3c';
+                } else {
+                    this.style.borderColor = '#28a745';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

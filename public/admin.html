@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Job Applications</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-header h1 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .dashboard-header p {
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .applications-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .search-filter {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .search-input,
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .applications-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .applications-table th,
+        .applications-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .applications-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .applications-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-new {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-reviewing {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-contacted {
+            background: #e8f5e8;
+            color: #388e3c;
+        }
+
+        .status-rejected {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .application-detail {
+            margin-bottom: 15px;
+        }
+
+        .application-detail label {
+            font-weight: 600;
+            color: #555;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .application-detail .value {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+        }
+
+        .no-applications {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .search-filter {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .applications-table {
+                font-size: 0.9rem;
+            }
+
+            .applications-table th,
+            .applications-table td {
+                padding: 10px 8px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #dc3545;
+            background: #ffebee;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-header">
+        <div class="container">
+            <h1>📊 Admin Dashboard</h1>
+            <p>Manage job applications and track recruitment progress</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalApplications">-</div>
+                <div class="stat-label">Total Applications</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="newApplications">-</div>
+                <div class="stat-label">New Applications</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="reviewingApplications">-</div>
+                <div class="stat-label">Under Review</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todayApplications">-</div>
+                <div class="stat-label">Today's Applications</div>
+            </div>
+        </div>
+
+        <div class="applications-section">
+            <div class="section-header">
+                <h2 class="section-title">Recent Applications</h2>
+                <div class="search-filter">
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search applications...">
+                    <select class="filter-select" id="positionFilter">
+                        <option value="">All Positions</option>
+                        <option value="Software Developer">Software Developer</option>
+                        <option value="Marketing Specialist">Marketing Specialist</option>
+                        <option value="Sales Representative">Sales Representative</option>
+                        <option value="Customer Service">Customer Service</option>
+                        <option value="Project Manager">Project Manager</option>
+                        <option value="Data Analyst">Data Analyst</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="new">New</option>
+                        <option value="reviewing">Reviewing</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="applicationsTableContainer">
+                <div class="loading">
+                    <p>Loading applications...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for viewing application details -->
+    <div id="applicationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Application Details</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div id="applicationDetails">
+                <!-- Application details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global applications array - will be populated from API
+        let applications = [];
+
+        // DOM elements
+        const searchInput = document.getElementById('searchInput');
+        const positionFilter = document.getElementById('positionFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const applicationsTableContainer = document.getElementById('applicationsTableContainer');
+        const modal = document.getElementById('applicationModal');
+        const closeModal = document.querySelector('.close');
+
+        // Initialize dashboard
+        async function initDashboard() {
+            await loadApplications();
+            updateStats();
+            renderApplicationsTable();
+            setupEventListeners();
+        }
+
+        // Load applications from API
+        async function loadApplications() {
+            try {
+                const response = await fetch('/api/applications');
+                const data = await response.json();
+
+                if (data.success) {
+                    applications = data.applications;
+                    console.log(`Loaded ${applications.length} applications`);
+                } else {
+                    console.error('Failed to load applications:', data.message);
+                    applications = [];
+                }
+            } catch (error) {
+                console.error('Error loading applications:', error);
+                applications = [];
+            }
+        }
+
+        // Refresh applications data
+        async function refreshApplications() {
+            await loadApplications();
+            updateStats();
+            renderApplicationsTable();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const total = applications.length;
+            const newApps = applications.filter(app => app.status === 'new').length;
+            const reviewing = applications.filter(app => app.status === 'reviewing').length;
+            const today = applications.filter(app => {
+                const appDate = new Date(app.timestamp);
+                const todayDate = new Date();
+                return appDate.toDateString() === todayDate.toDateString();
+            }).length;
+
+            document.getElementById('totalApplications').textContent = total;
+            document.getElementById('newApplications').textContent = newApps;
+            document.getElementById('reviewingApplications').textContent = reviewing;
+            document.getElementById('todayApplications').textContent = today;
+        }
+
+        // Render applications table
+        function renderApplicationsTable(filteredApplications = applications) {
+            if (filteredApplications.length === 0) {
+                applicationsTableContainer.innerHTML = `
+                    <div class="no-applications" style="text-align: center; padding: 40px; color: #666;">
+                        <p>No applications found matching your criteria.</p>
+                        <button onclick="refreshApplications()" class="btn btn-primary" style="margin-top: 10px;">Refresh</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const tableHTML = `
+                <table class="applications-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Position</th>
+                            <th>Email</th>
+                            <th>Experience</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filteredApplications.map(app => `
+                            <tr>
+                                <td>${app.firstName || ''} ${app.lastName || ''}</td>
+                                <td>${app.position || 'Not specified'}</td>
+                                <td>${app.email || 'Not provided'}</td>
+                                <td>${app.experience || 'Not specified'}</td>
+                                <td><span class="status-badge status-${app.status}">${capitalizeFirst(app.status)}</span></td>
+                                <td>${formatDate(app.timestamp)}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn btn-primary" onclick="viewApplication('${app.id}')">View</button>
+                                        <button class="btn btn-success" onclick="updateStatus('${app.id}', 'contacted')">Contact</button>
+                                        <button class="btn btn-danger" onclick="updateStatus('${app.id}', 'rejected')">Reject</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            applicationsTableContainer.innerHTML = tableHTML;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            searchInput.addEventListener('input', filterApplications);
+            positionFilter.addEventListener('change', filterApplications);
+            statusFilter.addEventListener('change', filterApplications);
+
+            closeModal.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            // Add refresh button functionality
+            const refreshBtn = document.createElement('button');
+            refreshBtn.className = 'btn btn-primary';
+            refreshBtn.textContent = '🔄 Refresh';
+            refreshBtn.onclick = refreshApplications;
+            refreshBtn.style.marginLeft = '10px';
+
+            const sectionHeader = document.querySelector('.section-header');
+            if (sectionHeader) {
+                sectionHeader.appendChild(refreshBtn);
+            }
+        }
+
+        // Filter applications
+        function filterApplications() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const positionFilter = document.getElementById('positionFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            const filtered = applications.filter(app => {
+                const matchesSearch = !searchTerm ||
+                    (app.firstName && app.firstName.toLowerCase().includes(searchTerm)) ||
+                    (app.lastName && app.lastName.toLowerCase().includes(searchTerm)) ||
+                    (app.email && app.email.toLowerCase().includes(searchTerm)) ||
+                    (app.position && app.position.toLowerCase().includes(searchTerm));
+
+                const matchesPosition = !positionFilter || app.position === positionFilter;
+                const matchesStatus = !statusFilter || app.status === statusFilter;
+
+                return matchesSearch && matchesPosition && matchesStatus;
+            });
+
+            renderApplicationsTable(filtered);
+        }
+
+        // View application details
+        function viewApplication(applicationId) {
+            const app = applications.find(a => a.id === applicationId);
+            if (!app) return;
+
+            const detailsHTML = `
+                <div class="application-detail">
+                    <label>Application ID:</label>
+                    <div class="value">${app.id || 'Not available'}</div>
+                </div>
+                <div class="application-detail">
+                    <label>Name:</label>
+                    <div class="value">${app.firstName || ''} ${app.lastName || ''}</div>
+                </div>
+                <div class="application-detail">
+                    <label>Email:</label>
+                    <div class="value">${app.email || 'Not provided'}</div>
+                </div>
+                <div class="application-detail">
+                    <label>Phone:</label>
+                    <div class="value">${app.phone || 'Not provided'}</div>
+                </div>
+                <div class="application-detail">
+                    <label>Position:</label>
+                    <div class="value">${app.position || 'Not specified'}</div>
+                </div>
+                <div class="application-detail">
+                    <label>Experience:</label>
+                    <div class="value">${app.experience || 'Not specified'}</div>
+                </div>
+                <div class="application-detail">
+                    <label>Expected Salary:</label>
+                    <div class="value">${app.salary || 'Not specified'}</div>
+                </div>
+                <div class="application-detail">
+                    <label>Availability:</label>
+                    <div class="value">${app.availability || 'Not specified'}</div>
+                </div>
+                <div class="application-detail">
+                    <label>LinkedIn:</label>
+                    <div class="value">${app.linkedin || 'Not provided'}</div>
+                </div>
+                <div class="application-detail">
+                    <label>Portfolio:</label>
+                    <div class="value">${app.portfolio || 'Not provided'}</div>
+                </div>
+                <div class="application-detail">
+                    <label>Source:</label>
+                    <div class="value">${app.source || 'Not specified'}</div>
+                </div>
+                <div class="application-detail">
+                    <label>Resume File:</label>
+                    <div class="value">${app.resumeFile || 'No file uploaded'}</div>
+                </div>
+                <div class="application-detail">
+                    <label>Cover Letter:</label>
+                    <div class="value" style="white-space: pre-wrap;">${app.coverLetter || 'Not provided'}</div>
+                </div>
+                <div class="application-detail">
+                    <label>Submitted:</label>
+                    <div class="value">${formatDate(app.timestamp)}</div>
+                </div>
+                <div class="application-detail">
+                    <label>Status:</label>
+                    <div class="value">
+                        <span class="status-badge status-${app.status}">${capitalizeFirst(app.status)}</span>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('applicationDetails').innerHTML = detailsHTML;
+            modal.style.display = 'block';
+        }
+
+        // Update application status
+        function updateStatus(applicationId, newStatus) {
+            const app = applications.find(a => a.id === applicationId);
+            if (app) {
+                app.status = newStatus;
+                updateStats();
+                filterApplications(); // Re-render with current filters
+
+                // In a real application, you would make an API call here
+                console.log(`Updated application ${applicationId} status to ${newStatus}`);
+            }
+        }
+
+        // Utility functions
+        function capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Not available';
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+        // Auto-refresh applications every 30 seconds
+        setInterval(() => {
+            refreshApplications();
+        }, 30000); // Update every 30 seconds
+    </script>
+</body>
+
+</html>
