@@ -287,7 +287,7 @@ const emailTemplates = {
                 
                 <p>Best regards,<br>
                 <strong>HR Team</strong><br>
-                Your Company Name</p>
+                CISCOTECH Inc</p>
             </div>
         </div>
         `,
