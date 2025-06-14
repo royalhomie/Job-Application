@@ -566,76 +566,53 @@
 
         // View application details
         function viewApplication(applicationId) {
-            const app = applications.find(a => a.id === applicationId);
-            if (!app) return;
+            const application = applications.find(app => app.id === applicationId);
+            if (!application) return;
 
-            const detailsHTML = `
-                <div class="application-detail">
-                    <label>Application ID:</label>
-                    <div class="value">${app.id || 'Not available'}</div>
-                </div>
-                <div class="application-detail">
-                    <label>Name:</label>
-                    <div class="value">${app.firstName || ''} ${app.lastName || ''}</div>
-                </div>
-                <div class="application-detail">
-                    <label>Email:</label>
-                    <div class="value">${app.email || 'Not provided'}</div>
-                </div>
-                <div class="application-detail">
-                    <label>Phone:</label>
-                    <div class="value">${app.phone || 'Not provided'}</div>
-                </div>
-                <div class="application-detail">
-                    <label>Position:</label>
-                    <div class="value">${app.position || 'Not specified'}</div>
-                </div>
-                <div class="application-detail">
-                    <label>Experience:</label>
-                    <div class="value">${app.experience || 'Not specified'}</div>
-                </div>
-                <div class="application-detail">
-                    <label>Expected Salary:</label>
-                    <div class="value">${app.salary || 'Not specified'}</div>
-                </div>
-                <div class="application-detail">
-                    <label>Availability:</label>
-                    <div class="value">${app.availability || 'Not specified'}</div>
-                </div>
-                <div class="application-detail">
-                    <label>LinkedIn:</label>
-                    <div class="value">${app.linkedin || 'Not provided'}</div>
-                </div>
-                <div class="application-detail">
-                    <label>Portfolio:</label>
-                    <div class="value">${app.portfolio || 'Not provided'}</div>
-                </div>
-                <div class="application-detail">
-                    <label>Source:</label>
-                    <div class="value">${app.source || 'Not specified'}</div>
-                </div>
-                <div class="application-detail">
-                    <label>Resume File:</label>
-                    <div class="value">${app.resumeFile || 'No file uploaded'}</div>
-                </div>
-                <div class="application-detail">
-                    <label>Cover Letter:</label>
-                    <div class="value" style="white-space: pre-wrap;">${app.coverLetter || 'Not provided'}</div>
-                </div>
-                <div class="application-detail">
-                    <label>Submitted:</label>
-                    <div class="value">${formatDate(app.timestamp)}</div>
-                </div>
-                <div class="application-detail">
-                    <label>Status:</label>
-                    <div class="value">
-                        <span class="status-badge status-${app.status}">${capitalizeFirst(app.status)}</span>
+            // Create modal content
+            const modalContent = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Application Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Name:</strong> ${application.firstName} ${application.lastName}</p>
+                                <p><strong>Email:</strong> ${application.email}</p>
+                                <p><strong>Phone:</strong> ${application.phone}</p>
+                                <p><strong>Position:</strong> ${application.position}</p>
+                                <p><strong>Experience:</strong> ${application.experience}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Expected Salary:</strong> ${application.salary}</p>
+                                <p><strong>Availability:</strong> ${application.availability}</p>
+                                <p><strong>LinkedIn:</strong> ${application.linkedin || 'Not provided'}</p>
+                                <p><strong>Portfolio:</strong> ${application.portfolio || 'Not provided'}</p>
+                                <p><strong>Source:</strong> ${application.source || 'Not specified'}</p>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h6>Cover Letter:</h6>
+                            <p class="cover-letter">${application.coverLetter}</p>
+                        </div>
+                        ${application.resumeFileName ? `
+                        <div class="mt-3">
+                            <h6>Resume:</h6>
+                            <a href="/uploads/${application.resumeFileName}" target="_blank" class="btn btn-primary btn-sm">
+                                Download Resume
+                            </a>
+                        </div>
+                        ` : ''}
                     </div>
                 </div>
             `;
 
-            document.getElementById('applicationDetails').innerHTML = detailsHTML;
-            modal.style.display = 'block';
+            // Create and show modal
+            const modal = new bootstrap.Modal(document.getElementById('applicationModal'));
+            document.getElementById('applicationModal').querySelector('.modal-content').innerHTML = modalContent;
+            modal.show();
         }
 
         // Update application status
@@ -677,7 +654,7 @@
         }
 
         // Add logout button to your HTML
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const header = document.querySelector('.header');
             const logoutButton = document.createElement('button');
             logoutButton.className = 'btn btn-danger';
@@ -685,6 +662,124 @@
             logoutButton.onclick = logout;
             header.appendChild(logoutButton);
         });
+
+        // Add these functions after your existing JavaScript code
+        async function contactApplicant(applicationId) {
+            const application = applications.find(app => app.id === applicationId);
+            if (!application) return;
+
+            // Create modal content
+            const modalContent = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Contact Applicant</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="contactForm">
+                            <div class="mb-3">
+                                <label class="form-label">To:</label>
+                                <input type="email" class="form-control" value="${application.email}" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Subject:</label>
+                                <input type="text" class="form-control" id="emailSubject" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Message:</label>
+                                <textarea class="form-control" id="emailMessage" rows="5" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Send Email</button>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            // Create and show modal
+            const modal = new bootstrap.Modal(document.getElementById('applicationModal'));
+            document.getElementById('applicationModal').querySelector('.modal-content').innerHTML = modalContent;
+            modal.show();
+
+            // Handle form submission
+            document.getElementById('contactForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const subject = document.getElementById('emailSubject').value;
+                const message = document.getElementById('emailMessage').value;
+
+                try {
+                    const response = await fetchWithAuth('/api/contact-applicant', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            applicationId,
+                            subject,
+                            message
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('Email sent successfully!');
+                        modal.hide();
+                    } else {
+                        alert('Failed to send email: ' + data.message);
+                    }
+                } catch (error) {
+                    alert('Error sending email: ' + error.message);
+                }
+            });
+        }
+
+        async function rejectApplication(applicationId) {
+            if (!confirm('Are you sure you want to reject this application?')) return;
+
+            try {
+                const response = await fetchWithAuth('/api/reject-application', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ applicationId })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Application rejected successfully!');
+                    refreshApplications();
+                } else {
+                    alert('Failed to reject application: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error rejecting application: ' + error.message);
+            }
+        }
+
+        // Update the displayApplications function to include the new button handlers
+        function displayApplications(applications) {
+            const tbody = document.getElementById('applicationsTableBody');
+            tbody.innerHTML = '';
+
+            applications.forEach(application => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${application.applicationId}</td>
+                    <td>${application.firstName} ${application.lastName}</td>
+                    <td>${application.email}</td>
+                    <td>${application.position}</td>
+                    <td>${application.experience}</td>
+                    <td>${application.salary}</td>
+                    <td>${application.availability}</td>
+                    <td>
+                        <button class="btn btn-info btn-sm" onclick="viewApplication('${application.applicationId}')">View</button>
+                        <button class="btn btn-success btn-sm" onclick="contactApplicant('${application.applicationId}')">Contact</button>
+                        <button class="btn btn-danger btn-sm" onclick="rejectApplication('${application.applicationId}')">Reject</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
     </script>
 </body>
 
