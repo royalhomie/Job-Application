@@ -564,12 +564,41 @@
             renderApplicationsTable(filtered);
         }
 
-        // View application details
+        // Add this function at the beginning of your script section
+        function showModal(title, content) {
+            const modal = document.getElementById('applicationModal');
+            const modalContent = modal.querySelector('.modal-content');
+            modalContent.innerHTML = `
+                <div class="modal-header">
+                    <h3>${title}</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    ${content}
+                </div>
+            `;
+            modal.style.display = 'block';
+
+            // Add close button functionality
+            const closeBtn = modalContent.querySelector('.close');
+            closeBtn.onclick = function () {
+                modal.style.display = 'none';
+            };
+
+            // Close modal when clicking outside
+            window.onclick = function (event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+
+        // Update the viewApplication function
         async function viewApplication(applicationId) {
             try {
                 const response = await fetch(`/api/applications/${applicationId}`, {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     }
                 });
                 const data = await response.json();
@@ -578,7 +607,6 @@
                     const application = data.application;
                     const modalContent = `
                         <div class="application-details">
-                            <h3>Application Details</h3>
                             <div class="detail-row">
                                 <strong>Name:</strong> ${application.firstName} ${application.lastName}
                             </div>
@@ -595,7 +623,7 @@
                                 <strong>Experience:</strong> ${application.experience}
                             </div>
                             <div class="detail-row">
-                                <strong>Expected Salary:</strong> ${application.expectedSalary}
+                                <strong>Expected Salary:</strong> ${application.salary}
                             </div>
                             <div class="detail-row">
                                 <strong>Availability:</strong> ${application.availability}
@@ -612,21 +640,21 @@
                             <div class="detail-row">
                                 <strong>Cover Letter:</strong> ${application.coverLetter || 'Not provided'}
                             </div>
-                            ${application.resume ? `
+                            ${application.resumeFileName ? `
                                 <div class="detail-row">
                                     <strong>Resume:</strong> 
-                                    <a href="/uploads/${application.resume}" target="_blank" class="btn btn-sm btn-primary">Download Resume</a>
+                                    <a href="/uploads/${application.resumeFileName}" target="_blank" class="btn btn-sm btn-primary">Download Resume</a>
                                 </div>
                             ` : ''}
                         </div>
                     `;
                     showModal("Application Details", modalContent);
                 } else {
-                    alert("Error loading application details");
+                    showModal("Error", `<div class="alert alert-danger">${data.message || "Error loading application details"}</div>`);
                 }
             } catch (error) {
                 console.error("Error:", error);
-                alert("Error loading application details");
+                showModal("Error", `<div class="alert alert-danger">Error loading application details</div>`);
             }
         }
 
@@ -678,12 +706,12 @@
             header.appendChild(logoutButton);
         });
 
-        // Add these functions after your existing JavaScript code
+        // Update the contactApplicant function
         async function contactApplicant(applicationId) {
             try {
                 const response = await fetch(`/api/applications/${applicationId}`, {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     }
                 });
                 const data = await response.json();
@@ -709,14 +737,15 @@
                     `;
                     showModal("Contact Applicant", modalContent);
                 } else {
-                    alert("Error loading application details");
+                    showModal("Error", `<div class="alert alert-danger">${data.message || "Error loading application details"}</div>`);
                 }
             } catch (error) {
                 console.error("Error:", error);
-                alert("Error loading application details");
+                showModal("Error", `<div class="alert alert-danger">Error loading application details</div>`);
             }
         }
 
+        // Update the rejectApplication function
         async function rejectApplication(applicationId) {
             if (confirm("Are you sure you want to reject this application?")) {
                 try {
@@ -724,26 +753,26 @@
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                         },
                         body: JSON.stringify({ applicationId })
                     });
 
                     const data = await response.json();
                     if (data.success) {
-                        alert("Application rejected successfully");
+                        showModal("Success", `<div class="alert alert-success">Application rejected successfully</div>`);
                         loadApplications(); // Refresh the list
                     } else {
-                        alert(data.message || "Error rejecting application");
+                        showModal("Error", `<div class="alert alert-danger">${data.message || "Error rejecting application"}</div>`);
                     }
                 } catch (error) {
                     console.error("Error:", error);
-                    alert("Error rejecting application");
+                    showModal("Error", `<div class="alert alert-danger">Error rejecting application</div>`);
                 }
             }
         }
 
-        // Add the handleContactSubmit function
+        // Update the handleContactSubmit function
         async function handleContactSubmit(event, applicationId) {
             event.preventDefault();
             const form = event.target;
@@ -754,7 +783,7 @@
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
                     },
                     body: JSON.stringify({
                         applicationId,
@@ -765,39 +794,15 @@
 
                 const data = await response.json();
                 if (data.success) {
-                    alert("Email sent successfully");
-                    closeModal();
+                    showModal("Success", `<div class="alert alert-success">Email sent successfully</div>`);
+                    document.getElementById('applicationModal').style.display = 'none';
                 } else {
-                    alert(data.message || "Error sending email");
+                    showModal("Error", `<div class="alert alert-danger">${data.message || "Error sending email"}</div>`);
                 }
             } catch (error) {
                 console.error("Error:", error);
-                alert("Error sending email");
+                showModal("Error", `<div class="alert alert-danger">Error sending email</div>`);
             }
-        }
-
-        // Update the displayApplications function
-        function displayApplications(applications) {
-            const tbody = document.getElementById("applicationsTableBody");
-            tbody.innerHTML = "";
-
-            applications.forEach(app => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${app.firstName} ${app.lastName}</td>
-                    <td>${app.position}</td>
-                    <td>${app.email}</td>
-                    <td>${app.experience}</td>
-                    <td>${app.status || "New"}</td>
-                    <td>${new Date(app.submittedAt).toLocaleString()}</td>
-                    <td class="action-buttons">
-                        <button onclick="viewApplication('${app._id}')" class="btn btn-info btn-sm">View</button>
-                        <button onclick="contactApplicant('${app._id}')" class="btn btn-primary btn-sm">Contact</button>
-                        <button onclick="rejectApplication('${app._id}')" class="btn btn-danger btn-sm">Reject</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
         }
     </script>
 </body>

@@ -614,8 +614,8 @@ app.post("/api/contact-applicant", authenticateToken, async (req, res) => {
   try {
     const { applicationId, subject, message } = req.body;
 
-    // Find the application
-    const application = await Application.findOne({ applicationId });
+    // Find the application using _id
+    const application = await Application.findById(applicationId);
     if (!application) {
       return res.status(404).json({
         success: false,
@@ -630,15 +630,15 @@ app.post("/api/contact-applicant", authenticateToken, async (req, res) => {
         to: application.email,
         subject: subject,
         html: `
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
-                            <h2>Message from HR</h2>
-                            <p>${message}</p>
-                            <hr>
-                            <p><small>This is an automated message. Please do not reply directly to this email.</small></p>
-                        </div>
-                    </div>
-                `,
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+              <h2>Message from HR</h2>
+              <p>${message}</p>
+              <hr>
+              <p><small>This is an automated message. Please do not reply directly to this email.</small></p>
+            </div>
+          </div>
+        `,
       });
     }
 
@@ -660,9 +660,9 @@ app.post("/api/reject-application", authenticateToken, async (req, res) => {
   try {
     const { applicationId } = req.body;
 
-    // Find and update the application
-    const application = await Application.findOneAndUpdate(
-      { applicationId },
+    // Find and update the application using _id
+    const application = await Application.findByIdAndUpdate(
+      applicationId,
       { status: "rejected" },
       { new: true }
     );
@@ -681,18 +681,18 @@ app.post("/api/reject-application", authenticateToken, async (req, res) => {
         to: application.email,
         subject: `Application Status Update - ${application.position}`,
         html: `
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
-                            <h2>Application Status Update</h2>
-                            <p>Dear ${application.firstName} ${application.lastName},</p>
-                            <p>Thank you for your interest in the ${application.position} position at our company.</p>
-                            <p>After careful consideration, we regret to inform you that we have decided to move forward with other candidates whose qualifications more closely match our current needs.</p>
-                            <p>We appreciate your interest in joining our team and wish you success in your job search.</p>
-                            <hr>
-                            <p><small>This is an automated message. Please do not reply directly to this email.</small></p>
-                        </div>
-                    </div>
-                `,
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+              <h2>Application Status Update</h2>
+              <p>Dear ${application.firstName} ${application.lastName},</p>
+              <p>Thank you for your interest in the ${application.position} position at our company.</p>
+              <p>After careful consideration, we regret to inform you that we have decided to move forward with other candidates whose qualifications more closely match our current needs.</p>
+              <p>We appreciate your interest in joining our team and wish you success in your job search.</p>
+              <hr>
+              <p><small>This is an automated message. Please do not reply directly to this email.</small></p>
+            </div>
+          </div>
+        `,
       });
     }
 
