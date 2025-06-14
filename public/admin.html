@@ -404,6 +404,57 @@
             transform: none;
             box-shadow: none;
         }
+
+        .confirmation-modal {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .confirmation-modal .icon {
+            font-size: 48px;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+
+        .confirmation-modal .message {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        .confirmation-modal .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .confirmation-modal .btn-cancel {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .confirmation-modal .btn-reject {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .confirmation-modal .btn-cancel:hover,
+        .confirmation-modal .btn-reject:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
     </style>
 </head>
 
@@ -931,27 +982,51 @@
 
         // Update the rejectApplication function
         async function rejectApplication(applicationId) {
-            if (confirm("Are you sure you want to reject this application?")) {
-                try {
-                    const response = await fetchWithAuth("/api/reject-application", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ applicationId })
-                    });
+            const modalContent = `
+                <div class="confirmation-modal">
+                    <div class="icon">⚠️</div>
+                    <div class="message">Are you sure you want to reject this application?</div>
+                    <div class="buttons">
+                        <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                        <button class="btn-reject" onclick="confirmRejection('${applicationId}')">Reject Application</button>
+                    </div>
+                </div>
+            `;
+            showModal("Confirm Rejection", modalContent);
+        }
 
-                    const data = await response.json();
-                    if (data.success) {
-                        showModal("Success", `<div class="alert alert-success">Application rejected successfully</div>`);
-                        loadApplications(); // Refresh the list
-                    } else {
-                        showModal("Error", `<div class="alert alert-danger">${data.message || "Error rejecting application"}</div>`);
-                    }
-                } catch (error) {
-                    console.error("Error:", error);
-                    showModal("Error", `<div class="alert alert-danger">Error rejecting application</div>`);
+        // Add these new functions
+        function closeModal() {
+            const modal = document.getElementById('applicationModal');
+            modal.style.display = 'none';
+        }
+
+        async function confirmRejection(applicationId) {
+            try {
+                const response = await fetchWithAuth("/api/reject-application", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ applicationId })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    closeModal();
+                    showModal("Success", `
+                        <div class="alert alert-success" style="text-align: center; padding: 20px;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">✅</div>
+                            <div style="font-size: 1.2rem;">Application rejected successfully</div>
+                        </div>
+                    `);
+                    loadApplications(); // Refresh the list
+                } else {
+                    showModal("Error", `<div class="alert alert-danger">${data.message || "Error rejecting application"}</div>`);
                 }
+            } catch (error) {
+                console.error("Error:", error);
+                showModal("Error", `<div class="alert alert-danger">Error rejecting application</div>`);
             }
         }
     </script>
