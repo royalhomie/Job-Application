@@ -553,6 +553,29 @@ app.get("/api/applications", authenticateToken, async (req, res) => {
   }
 });
 
+// Get a single application by ID
+app.get("/api/applications/:id", authenticateToken, async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.id);
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: "Application not found",
+      });
+    }
+    res.json({
+      success: true,
+      application,
+    });
+  } catch (error) {
+    console.error("Error fetching application:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching application",
+    });
+  }
+});
+
 // Health check endpoint
 app.get("/api/health", (req, res) => {
   res.json({
