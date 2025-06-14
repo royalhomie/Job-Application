@@ -204,50 +204,94 @@
         .modal-content {
             background: white;
             margin: 5% auto;
-            padding: 30px;
-            border-radius: 10px;
+            padding: 0;
+            border-radius: 15px;
             width: 90%;
-            max-width: 600px;
+            max-width: 700px;
             max-height: 80vh;
             overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
         .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px 15px 0 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
         }
 
-        .close {
-            color: #aaa;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover {
-            color: #000;
-        }
-
-        .application-detail {
-            margin-bottom: 15px;
-        }
-
-        .application-detail label {
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
             font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .application-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .detail-row {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .detail-row:hover {
+            transform: translateX(5px);
+        }
+
+        .detail-row strong {
             color: #555;
             display: block;
             margin-bottom: 5px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .application-detail .value {
-            background: #f8f9fa;
-            padding: 10px;
+        .detail-row span {
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .detail-row a.btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
             border-radius: 5px;
-            border-left: 3px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .detail-row a.btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .close:hover {
+            transform: rotate(90deg);
         }
 
         .no-applications {
@@ -617,42 +661,53 @@
                     const modalContent = `
                         <div class="application-details">
                             <div class="detail-row">
-                                <strong>Name:</strong> ${application.firstName} ${application.lastName}
+                                <strong>Name</strong>
+                                <span>${application.firstName} ${application.lastName}</span>
                             </div>
                             <div class="detail-row">
-                                <strong>Email:</strong> ${application.email}
+                                <strong>Email</strong>
+                                <span>${application.email}</span>
                             </div>
                             <div class="detail-row">
-                                <strong>Phone:</strong> ${application.phone}
+                                <strong>Phone</strong>
+                                <span>${application.phone}</span>
                             </div>
                             <div class="detail-row">
-                                <strong>Position:</strong> ${application.position}
+                                <strong>Position</strong>
+                                <span>${application.position}</span>
                             </div>
                             <div class="detail-row">
-                                <strong>Experience:</strong> ${application.experience}
+                                <strong>Experience</strong>
+                                <span>${application.experience}</span>
                             </div>
                             <div class="detail-row">
-                                <strong>Expected Salary:</strong> ${application.salary}
+                                <strong>Expected Salary</strong>
+                                <span>${application.salary}</span>
                             </div>
                             <div class="detail-row">
-                                <strong>Availability:</strong> ${application.availability}
+                                <strong>Availability</strong>
+                                <span>${application.availability}</span>
                             </div>
                             <div class="detail-row">
-                                <strong>LinkedIn:</strong> ${application.linkedin || 'Not provided'}
+                                <strong>LinkedIn</strong>
+                                <span>${application.linkedin || 'Not provided'}</span>
                             </div>
                             <div class="detail-row">
-                                <strong>Portfolio:</strong> ${application.portfolio || 'Not provided'}
+                                <strong>Portfolio</strong>
+                                <span>${application.portfolio || 'Not provided'}</span>
                             </div>
                             <div class="detail-row">
-                                <strong>Source:</strong> ${application.source || 'Not provided'}
+                                <strong>Source</strong>
+                                <span>${application.source || 'Not provided'}</span>
                             </div>
-                            <div class="detail-row">
-                                <strong>Cover Letter:</strong> ${application.coverLetter || 'Not provided'}
+                            <div class="detail-row" style="grid-column: 1 / -1;">
+                                <strong>Cover Letter</strong>
+                                <span>${application.coverLetter || 'Not provided'}</span>
                             </div>
                             ${application.resumeFileName ? `
-                                <div class="detail-row">
-                                    <strong>Resume:</strong> 
-                                    <a href="/uploads/${application.resumeFileName}" target="_blank" class="btn btn-sm btn-primary">Download Resume</a>
+                                <div class="detail-row" style="grid-column: 1 / -1;">
+                                    <strong>Resume</strong>
+                                    <a href="/uploads/${application.resumeFileName}" target="_blank" class="btn">Download Resume</a>
                                 </div>
                             ` : ''}
                         </div>
