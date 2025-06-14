@@ -333,6 +333,77 @@
             background: #ffebee;
             border-radius: 5px;
         }
+
+        .contact-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .contact-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        .contact-form label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+
+        .contact-form textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .contact-form button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .contact-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .contact-form button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
     </style>
 </head>
 
@@ -774,6 +845,11 @@
 
         // Update the contactApplicant function
         async function contactApplicant(applicationId) {
+            if (!applicationId) {
+                showModal("Error", `<div class="alert alert-danger">Invalid application ID</div>`);
+                return;
+            }
+
             try {
                 const response = await fetchWithAuth(`/api/applications/${applicationId}`);
                 const data = await response.json();
@@ -781,21 +857,21 @@
                 if (data.success) {
                     const application = data.application;
                     const modalContent = `
-                        <form id="contactForm" onsubmit="handleContactSubmit(event, '${applicationId}')">
+                        <div class="contact-form">
                             <div class="form-group">
-                                <label>To:</label>
-                                <input type="email" class="form-control" value="${application.email}" readonly>
+                                <label for="to">To</label>
+                                <input type="email" id="to" value="${application.email}" readonly>
                             </div>
                             <div class="form-group">
-                                <label>Subject:</label>
-                                <input type="text" class="form-control" name="subject" required>
+                                <label for="subject">Subject</label>
+                                <input type="text" id="subject" placeholder="Enter email subject">
                             </div>
                             <div class="form-group">
-                                <label>Message:</label>
-                                <textarea class="form-control" name="message" rows="5" required></textarea>
+                                <label for="message">Message</label>
+                                <textarea id="message" placeholder="Enter your message here..."></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary">Send Email</button>
-                        </form>
+                            <button onclick="sendEmail('${applicationId}')" id="sendEmailBtn">Send Email</button>
+                        </div>
                     `;
                     showModal("Contact Applicant", modalContent);
                 } else {
@@ -804,6 +880,52 @@
             } catch (error) {
                 console.error("Error:", error);
                 showModal("Error", `<div class="alert alert-danger">Error loading application details</div>`);
+            }
+        }
+
+        // Update the sendEmail function
+        async function sendEmail(applicationId) {
+            const to = document.getElementById('to').value;
+            const subject = document.getElementById('subject').value;
+            const message = document.getElementById('message').value;
+            const sendEmailBtn = document.getElementById('sendEmailBtn');
+
+            if (!subject || !message) {
+                showModal("Error", `<div class="alert alert-danger">Please fill in all fields</div>`);
+                return;
+            }
+
+            try {
+                sendEmailBtn.disabled = true;
+                sendEmailBtn.textContent = 'Sending...';
+
+                const response = await fetchWithAuth('/api/contact-applicant', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        applicationId,
+                        subject,
+                        message
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showModal("Success", `<div class="alert alert-success">Email sent successfully!</div>`);
+                    document.getElementById('subject').value = '';
+                    document.getElementById('message').value = '';
+                } else {
+                    showModal("Error", `<div class="alert alert-danger">${data.message || "Error sending email"}</div>`);
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                showModal("Error", `<div class="alert alert-danger">Error sending email</div>`);
+            } finally {
+                sendEmailBtn.disabled = false;
+                sendEmailBtn.textContent = 'Send Email';
             }
         }
 
@@ -830,38 +952,6 @@
                     console.error("Error:", error);
                     showModal("Error", `<div class="alert alert-danger">Error rejecting application</div>`);
                 }
-            }
-        }
-
-        // Update the handleContactSubmit function
-        async function handleContactSubmit(event, applicationId) {
-            event.preventDefault();
-            const form = event.target;
-            const formData = new FormData(form);
-
-            try {
-                const response = await fetchWithAuth("/api/contact-applicant", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        applicationId,
-                        subject: formData.get("subject"),
-                        message: formData.get("message")
-                    })
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    showModal("Success", `<div class="alert alert-success">Email sent successfully</div>`);
-                    document.getElementById('applicationModal').style.display = 'none';
-                } else {
-                    showModal("Error", `<div class="alert alert-danger">${data.message || "Error sending email"}</div>`);
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                showModal("Error", `<div class="alert alert-danger">Error sending email</div>`);
             }
         }
     </script>

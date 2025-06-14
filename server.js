@@ -32,6 +32,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
+// Serve static files from the uploads directory
+app.use("/uploads", express.static("uploads"));
+
 // Create necessary directories
 const uploadsDir = "./uploads";
 
