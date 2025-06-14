@@ -489,23 +489,31 @@
                         </tr>
                     </thead>
                     <tbody>
-                        ${filteredApplications.map(app => `
-                            <tr>
-                                <td>${app.firstName || ''} ${app.lastName || ''}</td>
-                                <td>${app.position || 'Not specified'}</td>
-                                <td>${app.email || 'Not provided'}</td>
-                                <td>${app.experience || 'Not specified'}</td>
-                                <td><span class="status-badge status-${app.status}">${capitalizeFirst(app.status)}</span></td>
-                                <td>${formatDate(app.timestamp)}</td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn btn-primary" onclick="viewApplication('${app.id}')">View</button>
-                                        <button class="btn btn-success" onclick="updateStatus('${app.id}', 'contacted')">Contact</button>
-                                        <button class="btn btn-danger" onclick="updateStatus('${app.id}', 'rejected')">Reject</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('')}
+                        ${filteredApplications.map(app => {
+                // Ensure we have a valid _id
+                const appId = app._id || app.id;
+                if (!appId) {
+                    console.error('Application missing ID:', app);
+                    return '';
+                }
+                return `
+                                <tr>
+                                    <td>${app.firstName || ''} ${app.lastName || ''}</td>
+                                    <td>${app.position || 'Not specified'}</td>
+                                    <td>${app.email || 'Not provided'}</td>
+                                    <td>${app.experience || 'Not specified'}</td>
+                                    <td><span class="status-badge status-${app.status || 'new'}">${capitalizeFirst(app.status || 'new')}</span></td>
+                                    <td>${formatDate(app.timestamp)}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-info btn-sm" onclick="viewApplication('${appId}')">View</button>
+                                            <button class="btn btn-primary btn-sm" onclick="contactApplicant('${appId}')">Contact</button>
+                                            <button class="btn btn-danger btn-sm" onclick="rejectApplication('${appId}')">Reject</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+            }).join('')}
                     </tbody>
                 </table>
             `;
@@ -595,12 +603,13 @@
 
         // Update the viewApplication function
         async function viewApplication(applicationId) {
+            if (!applicationId) {
+                showModal("Error", `<div class="alert alert-danger">Invalid application ID</div>`);
+                return;
+            }
+
             try {
-                const response = await fetch(`/api/applications/${applicationId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
-                });
+                const response = await fetchWithAuth(`/api/applications/${applicationId}`);
                 const data = await response.json();
 
                 if (data.success) {
@@ -696,24 +705,22 @@
             window.location.href = '/login.html';
         }
 
-        // Add logout button to your HTML
+        // Replace the logout button code with this
         document.addEventListener('DOMContentLoaded', function () {
-            const header = document.querySelector('.header');
+            const dashboardHeader = document.querySelector('.dashboard-header .container');
             const logoutButton = document.createElement('button');
             logoutButton.className = 'btn btn-danger';
             logoutButton.innerHTML = 'Logout';
+            logoutButton.style.float = 'right';
+            logoutButton.style.marginTop = '-40px';
             logoutButton.onclick = logout;
-            header.appendChild(logoutButton);
+            dashboardHeader.appendChild(logoutButton);
         });
 
         // Update the contactApplicant function
         async function contactApplicant(applicationId) {
             try {
-                const response = await fetch(`/api/applications/${applicationId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
-                });
+                const response = await fetchWithAuth(`/api/applications/${applicationId}`);
                 const data = await response.json();
 
                 if (data.success) {
@@ -749,11 +756,10 @@
         async function rejectApplication(applicationId) {
             if (confirm("Are you sure you want to reject this application?")) {
                 try {
-                    const response = await fetch("/api/reject-application", {
+                    const response = await fetchWithAuth("/api/reject-application", {
                         method: "POST",
                         headers: {
-                            "Content-Type": "application/json",
-                            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                            "Content-Type": "application/json"
                         },
                         body: JSON.stringify({ applicationId })
                     });
@@ -779,11 +785,10 @@
             const formData = new FormData(form);
 
             try {
-                const response = await fetch("/api/contact-applicant", {
+                const response = await fetchWithAuth("/api/contact-applicant", {
                     method: "POST",
                     headers: {
-                        "Content-Type": "application/json",
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                        "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
                         applicationId,

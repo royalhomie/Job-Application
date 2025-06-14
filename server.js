@@ -556,7 +556,10 @@ app.get("/api/applications", authenticateToken, async (req, res) => {
 // Get a single application by ID
 app.get("/api/applications/:id", authenticateToken, async (req, res) => {
   try {
-    const application = await Application.findById(req.params.id);
+    const application = await Application.findOne({
+      $or: [{ _id: req.params.id }, { id: req.params.id }],
+    });
+
     if (!application) {
       return res.status(404).json({
         success: false,
