@@ -9,9 +9,22 @@ const path = require("path");
 const fs = require("fs");
 const cors = require("cors");
 const https = require("https");
+const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Connect to MongoDB
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("MongoDB connection error:", err));
+
+// Import Application model
+const Application = require("./models/Application");
+const Admin = require("./models/Admin");
 
 // Middleware
 app.use(cors());
@@ -21,14 +34,9 @@ app.use(express.static("public"));
 
 // Create necessary directories
 const uploadsDir = "./uploads";
-const applicationsDir = "./applications";
 
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-if (!fs.existsSync(applicationsDir)) {
-  fs.mkdirSync(applicationsDir, { recursive: true });
 }
 
 // Configure multer for file uploads
@@ -215,36 +223,15 @@ function generateApplicationId() {
 }
 
 // Utility function to save application data
-function saveApplicationData(applicationData) {
-  const fileName = `application_${applicationData.applicationId}.txt`;
-  const filePath = path.join(applicationsDir, fileName);
-
-  const textData = `
-APPLICATION SUBMISSION
-=====================
-Application ID: ${applicationData.applicationId}
-Timestamp: ${applicationData.timestamp}
-Name: ${applicationData.firstName} ${applicationData.lastName}
-Email: ${applicationData.email}
-Phone: ${applicationData.phone}
-Address: ${applicationData.address}
-Position: ${applicationData.position}
-Experience: ${applicationData.experience}
-Expected Salary: ${applicationData.salary}
-Start Date: ${applicationData.availability}
-LinkedIn: ${applicationData.linkedin}
-Portfolio: ${applicationData.portfolio}
-Source: ${applicationData.source}
-Resume File: ${applicationData.resumeFileName}
-
-Cover Letter:
-${applicationData.coverLetter}
-
-=====================
-    `.trim();
-
-  fs.writeFileSync(filePath, textData);
-  return fileName;
+async function saveApplicationData(applicationData) {
+  try {
+    const application = new Application(applicationData);
+    await application.save();
+    return application;
+  } catch (error) {
+    console.error("Error saving application:", error);
+    throw error;
+  }
 }
 
 // Email templates
@@ -382,6 +369,76 @@ const emailTemplates = {
   }),
 };
 
+// Authentication middleware
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) {
+    return res
+      .status(401)
+      .json({ message: "Access denied. No token provided." });
+  }
+
+  try {
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    req.admin = verified;
+    next();
+  } catch (error) {
+    res.status(400).json({ message: "Invalid token" });
+  }
+};
+
+// Admin login route
+app.post("/api/admin/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    // Find admin by username
+    const admin = await Admin.findOne({ username });
+    if (!admin) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Check password
+    const validPassword = await admin.comparePassword(password);
+    if (!validPassword) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Create and assign token
+    const token = jwt.sign(
+      { id: admin._id, username: admin.username },
+      process.env.JWT_SECRET,
+      { expiresIn: "24h" }
+    );
+
+    res.json({ token });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Create initial admin user if none exists
+async function createInitialAdmin() {
+  try {
+    const adminCount = await Admin.countDocuments();
+    if (adminCount === 0) {
+      const admin = new Admin({
+        username: process.env.ADMIN_USERNAME,
+        password: process.env.ADMIN_PASSWORD,
+      });
+      await admin.save();
+      console.log("Initial admin user created");
+    }
+  } catch (error) {
+    console.error("Error creating initial admin:", error);
+  }
+}
+
+createInitialAdmin();
+
 // Routes
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
@@ -399,94 +456,58 @@ app.post(
       // Prepare application data
       const applicationData = {
         applicationId,
-        timestamp: new Date().toISOString(),
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         email: req.body.email,
         phone: req.body.phone,
-        address: req.body.address || "",
+        address: req.body.address,
         position: req.body.position,
-        experience: req.body.experience || "",
-        salary: req.body.salary || "",
-        availability: req.body.availability || "",
-        coverLetter: req.body.coverLetter || "",
-        linkedin: req.body.linkedin || "",
-        portfolio: req.body.portfolio || "",
-        source: req.body.source || "",
-        resumeFileName: req.file ? req.file.filename : "No file uploaded",
-        resumeOriginalName: req.file
-          ? req.file.originalname
-          : "No file uploaded",
+        experience: req.body.experience,
+        salary: req.body.salary,
+        availability: req.body.availability,
+        linkedin: req.body.linkedin,
+        portfolio: req.body.portfolio,
+        source: req.body.source,
+        resumeFileName: req.file ? req.file.filename : null,
+        coverLetter: req.body.coverLetter,
+        timestamp: new Date(),
       };
 
-      // Save application data to text file
-      const savedFileName = saveApplicationData(applicationData);
+      // Save to MongoDB
+      await saveApplicationData(applicationData);
 
-      // Try to send emails (optional - won't fail the application if email fails)
-      try {
-        // Send confirmation email to applicant
-        if (transporter) {
-          const applicantEmail =
-            emailTemplates.applicantConfirmation(applicationData);
+      // Send email notifications
+      if (transporter) {
+        try {
+          // Send confirmation to applicant
           await transporter.sendMail({
-            from: process.env.EMAIL_USER,
             to: applicationData.email,
-            subject: applicantEmail.subject,
-            html: applicantEmail.html,
+            ...emailTemplates.applicantConfirmation(applicationData),
           });
 
-          // Send notification email to HR
-          const hrEmail = emailTemplates.hrNotification(applicationData);
+          // Send notification to HR
           await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: process.env.HR_EMAIL || process.env.EMAIL_USER,
-            subject: hrEmail.subject,
-            html: hrEmail.html,
-            attachments: req.file
-              ? [
-                  {
-                    filename: applicationData.resumeOriginalName,
-                    path: req.file.path,
-                  },
-                ]
-              : [],
+            to: process.env.HR_EMAIL,
+            ...emailTemplates.hrNotification(applicationData),
           });
-
-          console.log(
-            `Emails sent successfully for application: ${applicationId}`
-          );
-        } else {
-          console.log(
-            `Email transporter not available. Skipping email notifications for application: ${applicationId}`
-          );
+        } catch (emailError) {
+          console.warn("Email sending failed:", emailError.message);
         }
-      } catch (emailError) {
-        console.warn(
-          `Email sending failed for application ${applicationId}:`,
-          emailError.message
-        );
-        // Don't fail the application submission if email fails
       }
 
       // Send WhatsApp notification
       await sendWhatsAppNotification(applicationData);
 
-      // Log application
-      console.log(
-        `New application received: ${applicationId} - ${applicationData.firstName} ${applicationData.lastName}`
-      );
-
       res.json({
         success: true,
-        message: "Application submitted successfully!",
+        message: "Application submitted successfully",
         applicationId: applicationId,
       });
     } catch (error) {
-      console.error("Error processing application:", error);
+      console.error("Error submitting application:", error);
       res.status(500).json({
         success: false,
-        message:
-          "An error occurred while processing your application. Please try again.",
+        message: "Error submitting application",
       });
     }
   }
@@ -515,30 +536,9 @@ app.get("/api/application-status/:id", (req, res) => {
 });
 
 // Get all applications for admin dashboard
-app.get("/api/applications", (req, res) => {
+app.get("/api/applications", authenticateToken, async (req, res) => {
   try {
-    const applications = [];
-
-    // Read all application files from the applications directory
-    if (fs.existsSync(applicationsDir)) {
-      const files = fs.readdirSync(applicationsDir);
-
-      files.forEach((file) => {
-        if (file.endsWith(".txt")) {
-          const filePath = path.join(applicationsDir, file);
-          const content = fs.readFileSync(filePath, "utf8");
-
-          // Parse the application data from the text file
-          const applicationData = parseApplicationFile(content);
-          if (applicationData) {
-            applications.push(applicationData);
-          }
-        }
-      });
-    }
-
-    // Sort applications by timestamp (newest first)
-    applications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const applications = await Application.find().sort({ timestamp: -1 }); // Sort by timestamp, newest first
 
     res.json({
       success: true,
@@ -552,64 +552,6 @@ app.get("/api/applications", (req, res) => {
     });
   }
 });
-
-// Utility function to parse application file content
-function parseApplicationFile(content) {
-  try {
-    const lines = content.split("\n");
-    const application = {};
-
-    lines.forEach((line) => {
-      if (line.includes("Application ID:")) {
-        application.id = line.split("Application ID:")[1].trim();
-      } else if (line.includes("Timestamp:")) {
-        application.timestamp = line.split("Timestamp:")[1].trim();
-      } else if (line.includes("Name:")) {
-        const name = line.split("Name:")[1].trim();
-        const nameParts = name.split(" ");
-        application.firstName = nameParts[0] || "";
-        application.lastName = nameParts.slice(1).join(" ") || "";
-      } else if (line.includes("Email:")) {
-        application.email = line.split("Email:")[1].trim();
-      } else if (line.includes("Phone:")) {
-        application.phone = line.split("Phone:")[1].trim();
-      } else if (line.includes("Position:")) {
-        application.position = line.split("Position:")[1].trim();
-      } else if (line.includes("Experience:")) {
-        application.experience = line.split("Experience:")[1].trim();
-      } else if (line.includes("Expected Salary:")) {
-        application.salary = line.split("Expected Salary:")[1].trim();
-      } else if (line.includes("Start Date:")) {
-        application.availability = line.split("Start Date:")[1].trim();
-      } else if (line.includes("LinkedIn:")) {
-        application.linkedin = line.split("LinkedIn:")[1].trim();
-      } else if (line.includes("Portfolio:")) {
-        application.portfolio = line.split("Portfolio:")[1].trim();
-      } else if (line.includes("Source:")) {
-        application.source = line.split("Source:")[1].trim();
-      } else if (line.includes("Resume File:")) {
-        application.resumeFile = line.split("Resume File:")[1].trim();
-      } else if (line.includes("Cover Letter:")) {
-        // Get everything after "Cover Letter:" until the end
-        const coverLetterIndex = content.indexOf("Cover Letter:");
-        if (coverLetterIndex !== -1) {
-          application.coverLetter = content
-            .substring(coverLetterIndex + "Cover Letter:".length)
-            .trim();
-        }
-      }
-    });
-
-    // Add default status (all applications start as 'new')
-    application.status = "new";
-    application.submittedAt = application.timestamp;
-
-    return application;
-  } catch (error) {
-    console.error("Error parsing application file:", error);
-    return null;
-  }
-}
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

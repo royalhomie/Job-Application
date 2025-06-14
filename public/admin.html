@@ -367,6 +367,40 @@
     </div>
 
     <script>
+        // Check if user is logged in
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        // Add token to all fetch requests
+        async function fetchWithAuth(url, options = {}) {
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const headers = {
+                ...options.headers,
+                'Authorization': `Bearer ${token}`
+            };
+
+            try {
+                const response = await fetch(url, { ...options, headers });
+                if (response.status === 401) {
+                    // Token expired or invalid
+                    localStorage.removeItem('adminToken');
+                    window.location.href = '/login.html';
+                    return;
+                }
+                return response;
+            } catch (error) {
+                console.error('Error:', error);
+                throw error;
+            }
+        }
+
         // Global applications array - will be populated from API
         let applications = [];
 
@@ -389,7 +423,7 @@
         // Load applications from API
         async function loadApplications() {
             try {
-                const response = await fetch('/api/applications');
+                const response = await fetchWithAuth('/api/applications');
                 const data = await response.json();
 
                 if (data.success) {
@@ -635,6 +669,22 @@
         setInterval(() => {
             refreshApplications();
         }, 30000); // Update every 30 seconds
+
+        // Add logout functionality
+        function logout() {
+            localStorage.removeItem('adminToken');
+            window.location.href = '/login.html';
+        }
+
+        // Add logout button to your HTML
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.querySelector('.header');
+            const logoutButton = document.createElement('button');
+            logoutButton.className = 'btn btn-danger';
+            logoutButton.innerHTML = 'Logout';
+            logoutButton.onclick = logout;
+            header.appendChild(logoutButton);
+        });
     </script>
 </body>
 
